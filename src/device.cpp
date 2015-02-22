@@ -1,8 +1,8 @@
 #include "device.h"
 
-#include <ssengine/log.h>
+//TODO: check device release before resource release.
 
-#include <gl/GL.h>
+#include <ssengine/log.h>
 
 static int s_clear_flag_wrapper[] = {
 	0,
@@ -15,6 +15,44 @@ static int s_clear_flag_wrapper[] = {
 	GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
 };
 
+#define MAX_SUPPORED_PRIMITIVES (5)
+static int s_primitive_wrapper[MAX_SUPPORED_PRIMITIVES + 1] = {
+	0,
+	GL_POINTS,
+	GL_LINES,
+	GL_LINE_STRIP,
+	GL_TRIANGLES,
+	GL_TRIANGLE_STRIP
+};
+
+ss_gl_render_device::ss_gl_render_device()
+	: pt(SS_MT_NULL), gl_pt(0),
+		input_layout(nullptr),
+		program(0), pass(nullptr)
+{
+	for (auto itor = predefined_techiques.begin();
+		itor != predefined_techiques.end();
+		++itor){
+		*itor = nullptr;
+	}
+
+	//GL_MAX_VERTEX_ATTRIBS
+	int maxVertexAttribs = 16;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+
+	vertex_buffers.resize(maxVertexAttribs);
+}
+
+void ss_gl_render_device::release_predefined_techniques(){
+	for (auto itor = predefined_techiques.begin();
+		itor != predefined_techiques.end();
+		++itor){
+		if (*itor){
+			delete *itor;
+		}
+	}
+}
+
 void ss_gl_render_device::clear_color(const ss_color& color){
 	glClearColor(color.r, color.g, color.b, color.a);
 }
@@ -25,17 +63,103 @@ void ss_gl_render_device::clear(int flags){
 	}
 }
 
+void ss_gl_render_device::set_viewport(int left, int top, int width, int height){
+	glViewport(left, top, width, height);
+}
+
+void ss_gl_render_device::set_primitive_type(ss_primitive_type _pt)
+{
+	if (pt != _pt){
+		pt = _pt;
+		int iPt = (int)_pt;
+		if (iPt > 0 && iPt <= MAX_SUPPORED_PRIMITIVES){
+			gl_pt = s_primitive_wrapper[iPt];
+		}
+	}
+}
+
 void ss_gl_render_device::draw(int count, int from){
-	//glDrawArrays(from, count);
+	if (program != 0 && pass == nullptr){
+		program = 0;
+		glUseProgram(0);
+	}
+	if (gl_pt != 0){
+		glDrawArrays(gl_pt, from, count);
+	}
 }
 
 void ss_gl_render_device::draw_index(int count, int from, int base){
+	if (program != 0 && pass == nullptr){
+		program = 0;
+		glUseProgram(0);
+	}
+	if (gl_pt != 0){
+		
+	}
+}
 
+void ss_gl_render_device::set_input_layout(ss_render_input_layout* layout){
+	ss_gl_render_input_layout* _layout = (ss_gl_render_input_layout*)layout;
+	if (input_layout != _layout){
+		ss_gl_render_input_layout* old = input_layout;
+		input_layout = _layout;
+		if (input_layout){
+			input_layout->use(old);
+		}
+	}
+}
+
+void ss_gl_render_device::set_vertex_buffer(
+	size_t start,
+	size_t num,
+	ss_vertex_buffer* const * buffer,
+	const unsigned int* strides,
+	const unsigned int* offset
+	){
+	if (start + num > vertex_buffers.size()){
+		SS_LOGW("Vertex buffer index exceed.");
+	}
+	for (size_t i = 0; i < num; i++){
+		size_t pos = start + i;
+		ss_gl_vertex_bind_info temp = {
+			buffer[i],
+			strides[i],
+			offset[i]
+		};
+		if (vertex_buffers[i] != temp){
+			vertex_buffers[i] = temp;
+			if (input_layout){
+				input_layout->rebindVB(pos);
+			}
+		}
+	}
+}
+
+void ss_gl_render_device::unset_vertex_buffer(
+	size_t start,
+	size_t num
+	){
+	if (start + num > vertex_buffers.size()){
+		SS_LOGW("Vertex buffer index exceed.");
+	}
+	for (size_t i = 0; i < num; i++){
+		size_t pos = start + i;
+		ss_gl_vertex_bind_info temp = {
+			NULL,
+			0,
+			0
+		};
+		if (vertex_buffers[i] != temp){
+			vertex_buffers[i] = temp;
+			if (input_layout){
+				input_layout->rebindVB(pos);
+			}
+		}
+	}
 }
 
 //define DllMain for windows
 #ifdef WIN32
-#include <Windows.h>
 BOOL WINAPI DllMain(
 	_In_  HINSTANCE hinstDLL,
 	_In_  DWORD fdwReason,
@@ -48,6 +172,11 @@ BOOL WINAPI DllMain(
 #ifdef WIN32
 //TODO: use EGLEmulator for Win32
 
+#ifdef NDEBUG
+#pragma comment(lib, "glew32s.lib")
+#else
+#pragma comment(lib, "glew32sd.lib")
+#endif
 #pragma comment(lib, "Opengl32.lib")
 
 void ss_gl_render_device::present(){
@@ -95,10 +224,14 @@ bool ss_gl_render_device::init(HWND hwnd){
 	this->hdc = hdc;
 	this->hrc = hrc;
 
+	glewInit();
+
 	return true;
 }
 
 ss_gl_render_device::~ss_gl_render_device(){
+	release_predefined_techniques();
+
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hrc);
 	hrc = NULL;
@@ -106,6 +239,7 @@ ss_gl_render_device::~ss_gl_render_device(){
 	ReleaseDC(hwnd, hdc);
 	hdc = NULL;
 	hwnd = NULL;
+
 }
 
 // Create device from WGL

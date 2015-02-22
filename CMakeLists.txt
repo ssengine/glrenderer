@@ -5,6 +5,11 @@ PROJECT(SSGLRenderer)
 SET(LOCAL_SOURCES_FILES
 	src/device.h
 	src/device.cpp
+
+	src/vertex_buffer.cpp
+
+	src/shader.cpp
+	src/predefined_shaders.cpp
 	)
 
 LINK_DIRECTORIES(${LUA_LIB})

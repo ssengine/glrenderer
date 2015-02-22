@@ -4,27 +4,171 @@
 
 #include <ssengine/render/device.h>
 
+#include <array>
+
+
 #ifdef WIN32
-#include <Windows.h>
+#define GLEW_STATIC
+#include <glew.h>
+#include <wglew.h>
 #endif
+
+#include <vector>
+#include <string>
+
+//TODO: per-index data
+
+struct ss_gl_render_input_element
+	: ss_render_input_element
+{
+	ss_gl_render_input_element() : disabled(false){}
+
+	unsigned int			location;		//slot for attribute location
+	bool					disabled;
+};
+
+struct ss_gl_render_input_layout
+	: ss_render_input_layout
+{
+	void rebind(size_t id);
+	void rebindVB(size_t slot);
+	void use(ss_gl_render_input_layout* old);
+
+	std::vector<ss_gl_render_input_element> elements;
+	struct ss_gl_render_device*				device;
+};
+
+struct ss_gl_render_pass
+	: ss_render_pass
+{
+	ss_gl_render_pass();
+	virtual ~ss_gl_render_pass();
+
+	virtual void begin();
+	virtual void end();
+
+	int loadShader(int type, const char* src);
+	bool link();
+
+	int program;
+
+	struct ss_gl_render_technique* tech;
+};
+
+struct ss_gl_render_technique
+	: ss_render_technique
+{
+	ss_gl_render_technique(size_t passCount);
+	virtual ~ss_gl_render_technique();
+	virtual size_t pass_count(){
+		return count;
+	}
+	virtual ss_render_pass* get_pass(size_t index){
+		return &passes[index];
+	}
+	virtual ss_render_input_layout* create_input_layout(
+		ss_render_input_element* elements,
+		size_t		count);
+
+	ss_gl_render_pass*	passes;
+	size_t				count;
+
+	// must sort by usage (for input_layout compatible).
+	std::vector<ss_render_input_usage> input_elements;
+
+	ss_gl_render_device* device;
+};
+
+struct ss_gl_vertex_buffer_memory :
+	ss_vertex_buffer_memory
+{
+	ss_gl_vertex_buffer_memory(
+			ss_render_format type,
+			size_t count, void* buf);
+	virtual ~ss_gl_vertex_buffer_memory();
+
+	virtual void* lock(){
+		return buf;
+	}
+
+	virtual void unlock(){
+	}
+
+	ss_render_format	type;
+	size_t					count;
+	void*					buf;
+};
+
+struct ss_gl_vertex_bind_info
+{
+	ss_vertex_buffer*	buffer;
+	unsigned int		stride;
+	unsigned int		offset;
+
+	bool operator!=(const ss_gl_vertex_bind_info& other) const{
+		return !((*this) == other);
+	}
+	bool operator==(const ss_gl_vertex_bind_info& other) const{
+		return buffer == other.buffer &&
+			stride == other.stride &&
+			offset == other.offset;
+	}
+};
 
 struct ss_gl_render_device
 	: ss_render_device
 {
-	ss_gl_render_device(){}
-	~ss_gl_render_device();
+	ss_gl_render_device();
+	virtual ~ss_gl_render_device();
 
 	virtual void clear_color(const ss_color& color);
 
 	virtual void clear(int flags = SS_CF_COLOR);
 	virtual void present();
 
-	virtual void destroy();
+	virtual void set_viewport(int left, int top, int width, int height);
 
+	virtual void set_primitive_type(ss_primitive_type mt);
 	virtual void draw(int count, int from);
 	virtual void draw_index(int count, int from, int base);
 
+	virtual ss_vertex_buffer_memory* create_memory_vertex_bufer(
+		ss_render_format type,
+		size_t count);
+
+	virtual ss_render_technique* get_predefined_technique(ss_predefined_technique_type type);
+
+	virtual void set_input_layout(ss_render_input_layout* layout);
+
+	virtual void set_vertex_buffer(
+			size_t start,
+			size_t num,
+			ss_vertex_buffer* const * buffer,
+			const unsigned int* strides,
+			const unsigned int* offset
+		);
+
+	virtual void unset_vertex_buffer(
+		size_t start,
+		size_t num
+		);
+
+//private:
+	ss_primitive_type	pt;
+	int					gl_pt;
+
+	std::array<ss_gl_render_technique*, 1>		predefined_techiques;
+
+	std::vector<ss_gl_vertex_bind_info>			vertex_buffers;
+
+	ss_gl_render_input_layout*	input_layout;
+
+	ss_gl_render_pass*			pass;
+	int							program;
+
+	void release_predefined_techniques();
 #ifdef WIN32
+public:
 	bool init(HWND hwnd);
 private:
 	HWND	hwnd;
