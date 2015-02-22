@@ -27,7 +27,7 @@ static ss_gl_render_technique* load_blank_technique(){
 		//fragment shader
 		FLOAT_PRECISION
 		"void main(){"
-		"	gl_FragColor = vec4(0,0,0,1);"
+		"	gl_FragColor = vec4(0.0,0.0,0.0,1.0);"
 		"}"
 		);
 	ASSUME_SUCCESS(fs);
