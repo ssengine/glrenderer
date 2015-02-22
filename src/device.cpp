@@ -25,6 +25,14 @@ void ss_gl_render_device::clear(int flags){
 	}
 }
 
+void ss_gl_render_device::draw(int count, int from){
+	//glDrawArrays(from, count);
+}
+
+void ss_gl_render_device::draw_index(int count, int from, int base){
+
+}
+
 //define DllMain for windows
 #ifdef WIN32
 #include <Windows.h>
@@ -90,7 +98,7 @@ bool ss_gl_render_device::init(HWND hwnd){
 	return true;
 }
 
-void ss_gl_render_device::destroy(){
+ss_gl_render_device::~ss_gl_render_device(){
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hrc);
 	hrc = NULL;
@@ -98,8 +106,6 @@ void ss_gl_render_device::destroy(){
 	ReleaseDC(hwnd, hdc);
 	hdc = NULL;
 	hwnd = NULL;
-
-	delete this;
 }
 
 // Create device from WGL

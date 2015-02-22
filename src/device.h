@@ -11,8 +11,8 @@
 struct ss_gl_render_device
 	: ss_render_device
 {
-	ss_gl_render_device(){
-	}
+	ss_gl_render_device(){}
+	~ss_gl_render_device();
 
 	virtual void clear_color(const ss_color& color);
 
@@ -21,6 +21,8 @@ struct ss_gl_render_device
 
 	virtual void destroy();
 
+	virtual void draw(int count, int from);
+	virtual void draw_index(int count, int from, int base);
 
 #ifdef WIN32
 	bool init(HWND hwnd);
