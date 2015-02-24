@@ -1,5 +1,7 @@
 #include "device.h"
 
+#include <assert.h>
+
 #define ASSUME_SUCCESS(p) do{if (!p){ delete ret;return NULL;}}while(0)
 
 #ifdef SS_OPENGL_ES
@@ -92,6 +94,9 @@ static ss_gl_render_technique* load_standard_technique(){
 
 	pass0.ps_constants.resize(0);
 
+	glUseProgram(pass0.program);
+	glUniform1i(glGetUniformLocation(pass0.program, "u_texture0"), 0);
+
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
 	glDeleteShader(vs);
@@ -116,12 +121,16 @@ ss_render_technique* ss_gl_render_device::get_predefined_technique(ss_predefined
 			return predefined_techiques[type];
 		}
 
+		//Should not load pass between pass::begin() & pass::end()
+		assert(pass == NULL);
+
 		switch (type){
 		case SS_PDT_BLANK:
 			predefined_techiques[0] = load_blank_technique();
 			break;
 		case SS_PDT_STANDARD:
 			predefined_techiques[2] = load_standard_technique();
+			break;
 		}
 
 		if (predefined_techiques[type]){

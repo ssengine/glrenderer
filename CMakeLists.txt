@@ -10,6 +10,8 @@ SET(LOCAL_SOURCES_FILES
 
 	src/shader.cpp
 	src/predefined_shaders.cpp
+
+	src/texture.cpp
 	)
 
 LINK_DIRECTORIES(${LUA_LIB})

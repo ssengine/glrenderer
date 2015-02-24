@@ -1,4 +1,5 @@
 #include "device.h"
+#include "format.h"
 #include <set>
 #include <ssengine/log.h>
 
@@ -57,39 +58,6 @@ void ss_gl_render_input_layout::use(ss_gl_render_input_layout* old){
 	for (size_t i = 0; i < elements.size(); i++){
 		rebind(i);
 	}
-}
-
-inline size_t ss_render_format_ele_size(ss_render_format type){
-	static size_t values[] = {
-		0, 4
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
-}
-
-inline int ss_render_format_ele_type(ss_render_format type){
-	static int values[] = {
-		0, GL_FLOAT
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
-}
-
-inline GLboolean ss_render_format_normalized(ss_render_format type){
-	static GLboolean values[] = {
-		0, GL_FALSE
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
 }
 
 void ss_gl_render_input_layout::rebind(size_t i){
@@ -165,6 +133,7 @@ void ss_gl_render_pass::end(){
 	if (tech->device->pass == this){
 		tech->device->pass = NULL;
 	}
+	// No need to call glUseProgram(0);
 }
 
 int ss_gl_render_pass::loadShader(int type, const char* src){

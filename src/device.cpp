@@ -48,6 +48,12 @@ ss_gl_render_device::ss_gl_render_device()
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxFragmentUniforms);
 
 	ps_constant_buffers.resize(maxFragmentUniforms);
+
+	int maxShaderResources = 16;
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxShaderResources);
+	// limit shader resource count to 32 for compatible.
+	maxShaderResources = maxShaderResources > 32 ? 32 : maxShaderResources;
+	ps_shader_resources.resize(maxShaderResources);
 }
 
 void ss_gl_render_device::release_predefined_techniques(){

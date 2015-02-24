@@ -105,7 +105,6 @@ struct ss_gl_vertex_buffer_memory :
 	ss_vertex_buffer_memory
 {
 	ss_gl_vertex_buffer_memory(
-			ss_render_format type,
 			size_t count, void* buf);
 	virtual ~ss_gl_vertex_buffer_memory();
 
@@ -116,8 +115,7 @@ struct ss_gl_vertex_buffer_memory :
 	virtual void unlock(){
 	}
 
-	ss_render_format	type;
-	size_t					count;
+	size_t					size;
 	void*					buf;
 };
 
@@ -157,6 +155,28 @@ struct ss_gl_constant_buffer_memory :
 	void*					buf;
 };
 
+struct ss_gl_texture2d :
+	ss_texture2d
+{
+	ss_gl_texture2d();
+	virtual ~ss_gl_texture2d();
+
+	unsigned int		name;
+};
+
+struct ss_gl_sampler_info
+{
+	ss_texture* texture;
+	//TODO: set sampler state
+
+	bool operator!=(const ss_gl_sampler_info& other) const{
+		return !((*this) == other);
+	}
+	bool operator==(const ss_gl_sampler_info& other) const{
+		return texture == other.texture;
+	}
+};
+
 struct ss_gl_render_device
 	: ss_render_device
 {
@@ -175,8 +195,7 @@ struct ss_gl_render_device
 	virtual void draw_index(int count, int from, int base);
 
 	virtual ss_vertex_buffer_memory* create_memory_vertex_bufer(
-		ss_render_format type,
-		size_t count);
+		size_t bytes);
 
 	virtual ss_render_technique* get_predefined_technique(ss_predefined_technique_type type);
 
@@ -210,6 +229,22 @@ struct ss_gl_render_device
 		size_t num
 		);
 
+	ss_texture2d* create_texture2d(
+		size_t width, size_t height,
+		ss_render_format format,
+		const void* data);
+
+	virtual void set_ps_texture2d_resource(
+		size_t start,
+		size_t num,
+		ss_texture2d* const * textures
+		);
+
+	virtual void unset_ps_texture2d_resource(
+		size_t start,
+		size_t num
+		);
+
 //private:
 	ss_primitive_type	pt;
 	int					gl_pt;
@@ -219,6 +254,8 @@ struct ss_gl_render_device
 	std::vector<ss_gl_vertex_bind_info>			vertex_buffers;
 
 	std::vector<ss_constant_buffer*>			ps_constant_buffers;
+
+	std::vector<ss_gl_sampler_info>				ps_shader_resources;
 
 	ss_gl_render_input_layout*	input_layout;
 
