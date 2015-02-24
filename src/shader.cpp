@@ -7,7 +7,7 @@
 
 #include <assert.h>
 
-//TODO: check if format is right.
+//TODO: check if format is right (between input_layout and buffer).
 
 void ss_gl_render_input_layout::use(ss_gl_render_input_layout* old){
 	std::vector<int> usedSlots;
@@ -157,6 +157,7 @@ void ss_gl_render_pass::begin(){
 		tech->device->program = program;
 		glUseProgram(program);
 	}
+	rebindAllPSCB();
 }
 
 void ss_gl_render_pass::end(){
@@ -206,6 +207,35 @@ bool ss_gl_render_pass::link(){
 	return true;
 }
 
+void ss_gl_render_pass::rebindPSCB(size_t slot){
+	if (slot < ps_constants.size()){
+		ss_gl_constant_buffer_memory* buf = (ss_gl_constant_buffer_memory*)tech->device->ps_constant_buffers[slot];
+
+		constant_declaration& cons = ps_constants[slot];
+		for (auto itor = cons.uniforms.begin();
+			itor != cons.uniforms.end();
+			++itor){
+			const char* buffer = reinterpret_cast<const char*>(buf->buf) + itor->offset;
+			switch (itor->format){
+			case SS_FORMAT_FLOAT32_RGBA:
+				{
+					const float* values = reinterpret_cast<const float*>(buffer);
+					glUniform4f(itor->location, values[0], values[1], values[2], values[3]);
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+void ss_gl_render_pass::rebindAllPSCB(){
+	for (size_t i = 0; i < ps_constants.size(); ++i){
+		rebindPSCB(i);
+	}
+}
+
 ss_gl_render_technique::ss_gl_render_technique(size_t passCount)
 	: count(passCount),
 	passes(new ss_gl_render_pass[passCount])
@@ -218,7 +248,6 @@ ss_gl_render_technique::ss_gl_render_technique(size_t passCount)
 ss_gl_render_technique::~ss_gl_render_technique(){
 	delete[] passes;
 }
-
 
 ss_render_input_layout* ss_gl_render_technique::create_input_layout(
 	ss_render_input_element* elements,

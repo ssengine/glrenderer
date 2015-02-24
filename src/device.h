@@ -38,6 +38,23 @@ struct ss_gl_render_input_layout
 	struct ss_gl_render_device*				device;
 };
 
+struct uniform_declaration{
+	int					location;
+	ss_render_format	format;
+	int					offset;
+	int					reserved;
+
+	uniform_declaration(int l, ss_render_format f, int ofs)
+		: location(l), format(f), offset(ofs), reserved(0)
+	{
+
+	}
+};
+
+struct constant_declaration{
+	std::vector<uniform_declaration> uniforms;
+};
+
 struct ss_gl_render_pass
 	: ss_render_pass
 {
@@ -50,9 +67,14 @@ struct ss_gl_render_pass
 	int loadShader(int type, const char* src);
 	bool link();
 
+	void rebindPSCB(size_t slot);
+	void rebindAllPSCB();
+
 	int program;
 
 	struct ss_gl_render_technique* tech;
+
+	std::vector<constant_declaration>  ps_constants;
 };
 
 struct ss_gl_render_technique
@@ -115,6 +137,26 @@ struct ss_gl_vertex_bind_info
 	}
 };
 
+struct ss_gl_constant_buffer_memory :
+	ss_constant_buffer_memory
+{
+	ss_gl_constant_buffer_memory(
+	ss_render_format type,
+	size_t count, void* buf);
+	virtual ~ss_gl_constant_buffer_memory();
+
+	virtual void* lock(){
+		return buf;
+	}
+
+	virtual void unlock(){
+	}
+
+	ss_render_format	type;
+	size_t					count;
+	void*					buf;
+};
+
 struct ss_gl_render_device
 	: ss_render_device
 {
@@ -153,13 +195,30 @@ struct ss_gl_render_device
 		size_t num
 		);
 
+	virtual ss_constant_buffer_memory* create_memory_constant_buffer(
+		ss_render_format type,
+		size_t count
+		);
+
+	virtual void set_ps_constant_buffer(
+		size_t start,
+		size_t num,
+		ss_constant_buffer* const * buffer
+		);
+	virtual void unset_ps_constant_buffer(
+		size_t start,
+		size_t num
+		);
+
 //private:
 	ss_primitive_type	pt;
 	int					gl_pt;
 
-	std::array<ss_gl_render_technique*, 1>		predefined_techiques;
+	std::array<ss_gl_render_technique*, 3>		predefined_techiques;
 
 	std::vector<ss_gl_vertex_bind_info>			vertex_buffers;
+
+	std::vector<ss_constant_buffer*>			ps_constant_buffers;
 
 	ss_gl_render_input_layout*	input_layout;
 
