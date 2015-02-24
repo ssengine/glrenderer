@@ -55,6 +55,26 @@ struct constant_declaration{
 	std::vector<uniform_declaration> uniforms;
 };
 
+struct auto_shader{
+	auto_shader(int v)
+	: shader(v)
+	{
+	}
+	~auto_shader(){
+		if (shader != 0){
+			glDeleteShader(shader);
+		}
+	}
+	bool operator !(){
+		return shader == 0;
+	}
+	operator int(){
+		return shader;
+	}
+
+	int shader;
+};
+
 struct ss_gl_render_pass
 	: ss_render_pass
 {

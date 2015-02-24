@@ -16,7 +16,7 @@ static ss_gl_render_technique* load_blank_technique(){
 
 	ss_gl_render_pass& pass0 = ret->passes[0];
 
-	int vs = pass0.loadShader(GL_VERTEX_SHADER,
+	auto_shader vs = pass0.loadShader(GL_VERTEX_SHADER,
 		//vertex shader
 		FLOAT_PRECISION
 		"attribute vec4 a_position;"
@@ -25,7 +25,7 @@ static ss_gl_render_technique* load_blank_technique(){
 		"}"
 		);
 	ASSUME_SUCCESS(vs);
-	int fs = pass0.loadShader(GL_FRAGMENT_SHADER,
+	auto_shader fs = pass0.loadShader(GL_FRAGMENT_SHADER,
 		//fragment shader
 		FLOAT_PRECISION
 		"uniform vec4 u_color;"
@@ -48,8 +48,6 @@ static ss_gl_render_technique* load_blank_technique(){
 
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
-	glDeleteShader(vs);
-	glDeleteShader(fs);
 
 	glBindAttribLocation(pass0.program, 0, "a_position");
 
@@ -63,7 +61,7 @@ static ss_gl_render_technique* load_standard_technique(){
 
 	ss_gl_render_pass& pass0 = ret->passes[0];
 
-	int vs = pass0.loadShader(GL_VERTEX_SHADER,
+	auto_shader vs = pass0.loadShader(GL_VERTEX_SHADER,
 		//vertex shader
 		FLOAT_PRECISION
 		"attribute vec4 a_color;"
@@ -78,7 +76,7 @@ static ss_gl_render_technique* load_standard_technique(){
 		"}"
 		);
 	ASSUME_SUCCESS(vs);
-	int fs = pass0.loadShader(GL_FRAGMENT_SHADER,
+	auto_shader fs = pass0.loadShader(GL_FRAGMENT_SHADER,
 		//fragment shader
 		FLOAT_PRECISION
 		"uniform sampler2D u_texture0;"
@@ -88,6 +86,7 @@ static ss_gl_render_technique* load_standard_technique(){
 		"	gl_FragColor = v_color * texture2D(u_texture0, v_texcoord);"
 		"}"
 		);
+
 	ASSUME_SUCCESS(fs);
 
 	ASSUME_SUCCESS(pass0.link());
@@ -99,8 +98,6 @@ static ss_gl_render_technique* load_standard_technique(){
 
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
-	glDeleteShader(vs);
-	glDeleteShader(fs);
 
 	glBindAttribLocation(pass0.program, 0, "a_position");
 	glBindAttribLocation(pass0.program, 1, "a_color");

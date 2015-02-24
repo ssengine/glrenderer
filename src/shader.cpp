@@ -153,7 +153,8 @@ int ss_gl_render_pass::loadShader(int type, const char* src){
 		glGetShaderInfoLog(shader, infoLen, &infoLen, buf);
 		SS_LOGE("GL Shader Compile Error: \n%s", buf);
 		delete[] buf;
-		return false;
+		glDeleteShader(shader);
+		return 0;
 	}
 	glAttachShader(program, shader);
 	return shader;
