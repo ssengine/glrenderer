@@ -73,7 +73,7 @@ void ss_gl_render_input_layout::rebind(size_t i){
 			glEnableVertexAttribArray(location);
 		}
 		const char* buffer = reinterpret_cast<const char*>(
-			static_cast<ss_gl_vertex_buffer_memory*>(vbi.buffer)->buf
+			static_cast<ss_gl_buffer_memory*>(vbi.buffer)->buf
 			);
 
 		const char* pointer = buffer + vbi.offset + ele.alignOffset;
@@ -179,7 +179,7 @@ bool ss_gl_render_pass::link(){
 
 void ss_gl_render_pass::rebindPSCB(size_t slot){
 	if (slot < ps_constants.size()){
-		ss_gl_constant_buffer_memory* buf = (ss_gl_constant_buffer_memory*)tech->device->ps_constant_buffers[slot];
+		ss_gl_buffer_memory* buf = (ss_gl_buffer_memory*)tech->device->ps_constant_buffers[slot];
 
 		constant_declaration& cons = ps_constants[slot];
 		for (auto itor = cons.uniforms.begin();

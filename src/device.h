@@ -121,12 +121,12 @@ struct ss_gl_render_technique
 	ss_gl_render_device* device;
 };
 
-struct ss_gl_vertex_buffer_memory :
-	ss_vertex_buffer_memory
+struct ss_gl_buffer_memory :
+	ss_buffer_memory
 {
-	ss_gl_vertex_buffer_memory(
+	ss_gl_buffer_memory(
 			size_t count, void* buf);
-	virtual ~ss_gl_vertex_buffer_memory();
+	virtual ~ss_gl_buffer_memory();
 
 	virtual void* lock(){
 		return buf;
@@ -141,7 +141,7 @@ struct ss_gl_vertex_buffer_memory :
 
 struct ss_gl_vertex_bind_info
 {
-	ss_vertex_buffer*	buffer;
+	ss_buffer*	buffer;
 	unsigned int		stride;
 	unsigned int		offset;
 
@@ -155,25 +155,6 @@ struct ss_gl_vertex_bind_info
 	}
 };
 
-struct ss_gl_constant_buffer_memory :
-	ss_constant_buffer_memory
-{
-	ss_gl_constant_buffer_memory(
-	ss_render_format type,
-	size_t count, void* buf);
-	virtual ~ss_gl_constant_buffer_memory();
-
-	virtual void* lock(){
-		return buf;
-	}
-
-	virtual void unlock(){
-	}
-
-	ss_render_format	type;
-	size_t					count;
-	void*					buf;
-};
 
 struct ss_gl_texture2d :
 	ss_texture2d
@@ -214,7 +195,7 @@ struct ss_gl_render_device
 	virtual void draw(int count, int from);
 	virtual void draw_index(int count, int from, int base);
 
-	virtual ss_vertex_buffer_memory* create_memory_vertex_bufer(
+	virtual ss_buffer_memory* create_memory_buffer(
 		size_t bytes);
 
 	virtual ss_render_technique* get_predefined_technique(ss_predefined_technique_type type);
@@ -224,7 +205,7 @@ struct ss_gl_render_device
 	virtual void set_vertex_buffer(
 			size_t start,
 			size_t num,
-			ss_vertex_buffer* const * buffer,
+			ss_buffer* const * buffer,
 			const unsigned int* strides,
 			const unsigned int* offset
 		);
@@ -234,15 +215,10 @@ struct ss_gl_render_device
 		size_t num
 		);
 
-	virtual ss_constant_buffer_memory* create_memory_constant_buffer(
-		ss_render_format type,
-		size_t count
-		);
-
 	virtual void set_ps_constant_buffer(
 		size_t start,
 		size_t num,
-		ss_constant_buffer* const * buffer
+		ss_buffer* const * buffer
 		);
 	virtual void unset_ps_constant_buffer(
 		size_t start,
@@ -273,7 +249,7 @@ struct ss_gl_render_device
 
 	std::vector<ss_gl_vertex_bind_info>			vertex_buffers;
 
-	std::vector<ss_constant_buffer*>			ps_constant_buffers;
+	std::vector<ss_buffer*>			ps_constant_buffers;
 
 	std::vector<ss_gl_sampler_info>				ps_shader_resources;
 
