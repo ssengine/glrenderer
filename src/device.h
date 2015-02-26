@@ -135,6 +135,8 @@ struct ss_gl_buffer_memory :
 	virtual void unlock(){
 	}
 
+	virtual void copy(size_t ofs, void* src, size_t sz);
+
 	size_t					size;
 	void*					buf;
 };

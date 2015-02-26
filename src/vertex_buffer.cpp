@@ -18,6 +18,10 @@ ss_gl_buffer_memory::~ss_gl_buffer_memory()
 	free(buf);
 }
 
+void ss_gl_buffer_memory::copy(size_t ofs, void* src, size_t sz){
+	memcpy(((char*)buf) + ofs, src, sz);
+}
+
 void ss_gl_render_device::set_vertex_buffer(
 	size_t start,
 	size_t num,
