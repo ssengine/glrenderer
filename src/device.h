@@ -38,6 +38,43 @@ struct ss_gl_render_input_layout
 	struct ss_gl_render_device*				device;
 };
 
+struct uniform_declaration{
+	int					location;
+	ss_render_format	format;
+	int					offset;
+	int					reserved;
+
+	uniform_declaration(int l, ss_render_format f, int ofs)
+		: location(l), format(f), offset(ofs), reserved(0)
+	{
+
+	}
+};
+
+struct constant_declaration{
+	std::vector<uniform_declaration> uniforms;
+};
+
+struct auto_shader{
+	auto_shader(int v)
+	: shader(v)
+	{
+	}
+	~auto_shader(){
+		if (shader != 0){
+			glDeleteShader(shader);
+		}
+	}
+	bool operator !(){
+		return shader == 0;
+	}
+	operator int(){
+		return shader;
+	}
+
+	int shader;
+};
+
 struct ss_gl_render_pass
 	: ss_render_pass
 {
@@ -50,9 +87,14 @@ struct ss_gl_render_pass
 	int loadShader(int type, const char* src);
 	bool link();
 
+	void rebindPSCB(size_t slot);
+	void rebindAllPSCB();
+
 	int program;
 
 	struct ss_gl_render_technique* tech;
+
+	std::vector<constant_declaration>  ps_constants;
 };
 
 struct ss_gl_render_technique
@@ -79,13 +121,12 @@ struct ss_gl_render_technique
 	ss_gl_render_device* device;
 };
 
-struct ss_gl_vertex_buffer_memory :
-	ss_vertex_buffer_memory
+struct ss_gl_buffer_memory :
+	ss_buffer_memory
 {
-	ss_gl_vertex_buffer_memory(
-			ss_render_format type,
+	ss_gl_buffer_memory(
 			size_t count, void* buf);
-	virtual ~ss_gl_vertex_buffer_memory();
+	virtual ~ss_gl_buffer_memory();
 
 	virtual void* lock(){
 		return buf;
@@ -94,14 +135,13 @@ struct ss_gl_vertex_buffer_memory :
 	virtual void unlock(){
 	}
 
-	ss_render_format	type;
-	size_t					count;
+	size_t					size;
 	void*					buf;
 };
 
 struct ss_gl_vertex_bind_info
 {
-	ss_vertex_buffer*	buffer;
+	ss_buffer*	buffer;
 	unsigned int		stride;
 	unsigned int		offset;
 
@@ -112,6 +152,29 @@ struct ss_gl_vertex_bind_info
 		return buffer == other.buffer &&
 			stride == other.stride &&
 			offset == other.offset;
+	}
+};
+
+
+struct ss_gl_texture2d :
+	ss_texture2d
+{
+	ss_gl_texture2d();
+	virtual ~ss_gl_texture2d();
+
+	unsigned int		name;
+};
+
+struct ss_gl_sampler_info
+{
+	ss_texture* texture;
+	//TODO: set sampler state
+
+	bool operator!=(const ss_gl_sampler_info& other) const{
+		return !((*this) == other);
+	}
+	bool operator==(const ss_gl_sampler_info& other) const{
+		return texture == other.texture;
 	}
 };
 
@@ -132,9 +195,8 @@ struct ss_gl_render_device
 	virtual void draw(int count, int from);
 	virtual void draw_index(int count, int from, int base);
 
-	virtual ss_vertex_buffer_memory* create_memory_vertex_bufer(
-		ss_render_format type,
-		size_t count);
+	virtual ss_buffer_memory* create_memory_buffer(
+		size_t bytes);
 
 	virtual ss_render_technique* get_predefined_technique(ss_predefined_technique_type type);
 
@@ -143,7 +205,7 @@ struct ss_gl_render_device
 	virtual void set_vertex_buffer(
 			size_t start,
 			size_t num,
-			ss_vertex_buffer* const * buffer,
+			ss_buffer* const * buffer,
 			const unsigned int* strides,
 			const unsigned int* offset
 		);
@@ -153,13 +215,43 @@ struct ss_gl_render_device
 		size_t num
 		);
 
+	virtual void set_ps_constant_buffer(
+		size_t start,
+		size_t num,
+		ss_buffer* const * buffer
+		);
+	virtual void unset_ps_constant_buffer(
+		size_t start,
+		size_t num
+		);
+
+	ss_texture2d* create_texture2d(
+		size_t width, size_t height,
+		ss_render_format format,
+		const void* data);
+
+	virtual void set_ps_texture2d_resource(
+		size_t start,
+		size_t num,
+		ss_texture2d* const * textures
+		);
+
+	virtual void unset_ps_texture2d_resource(
+		size_t start,
+		size_t num
+		);
+
 //private:
 	ss_primitive_type	pt;
 	int					gl_pt;
 
-	std::array<ss_gl_render_technique*, 1>		predefined_techiques;
+	std::array<ss_gl_render_technique*, 3>		predefined_techiques;
 
 	std::vector<ss_gl_vertex_bind_info>			vertex_buffers;
+
+	std::vector<ss_buffer*>			ps_constant_buffers;
+
+	std::vector<ss_gl_sampler_info>				ps_shader_resources;
 
 	ss_gl_render_input_layout*	input_layout;
 

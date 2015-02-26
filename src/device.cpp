@@ -2,6 +2,8 @@
 
 //TODO: check device release before resource release.
 
+//TODO: cache GL state for performance.
+
 #include <ssengine/log.h>
 
 static int s_clear_flag_wrapper[] = {
@@ -41,6 +43,17 @@ ss_gl_render_device::ss_gl_render_device()
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
 
 	vertex_buffers.resize(maxVertexAttribs);
+
+	int maxFragmentUniforms = 256;
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxFragmentUniforms);
+
+	ps_constant_buffers.resize(maxFragmentUniforms);
+
+	int maxShaderResources = 16;
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxShaderResources);
+	// limit shader resource count to 32 for compatible.
+	maxShaderResources = maxShaderResources > 32 ? 32 : maxShaderResources;
+	ps_shader_resources.resize(maxShaderResources);
 }
 
 void ss_gl_render_device::release_predefined_techniques(){
@@ -105,55 +118,6 @@ void ss_gl_render_device::set_input_layout(ss_render_input_layout* layout){
 		input_layout = _layout;
 		if (input_layout){
 			input_layout->use(old);
-		}
-	}
-}
-
-void ss_gl_render_device::set_vertex_buffer(
-	size_t start,
-	size_t num,
-	ss_vertex_buffer* const * buffer,
-	const unsigned int* strides,
-	const unsigned int* offset
-	){
-	if (start + num > vertex_buffers.size()){
-		SS_LOGW("Vertex buffer index exceed.");
-	}
-	for (size_t i = 0; i < num; i++){
-		size_t pos = start + i;
-		ss_gl_vertex_bind_info temp = {
-			buffer[i],
-			strides[i],
-			offset[i]
-		};
-		if (vertex_buffers[i] != temp){
-			vertex_buffers[i] = temp;
-			if (input_layout){
-				input_layout->rebindVB(pos);
-			}
-		}
-	}
-}
-
-void ss_gl_render_device::unset_vertex_buffer(
-	size_t start,
-	size_t num
-	){
-	if (start + num > vertex_buffers.size()){
-		SS_LOGW("Vertex buffer index exceed.");
-	}
-	for (size_t i = 0; i < num; i++){
-		size_t pos = start + i;
-		ss_gl_vertex_bind_info temp = {
-			NULL,
-			0,
-			0
-		};
-		if (vertex_buffers[i] != temp){
-			vertex_buffers[i] = temp;
-			if (input_layout){
-				input_layout->rebindVB(pos);
-			}
 		}
 	}
 }

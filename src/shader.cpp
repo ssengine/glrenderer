@@ -1,4 +1,5 @@
 #include "device.h"
+#include "format.h"
 #include <set>
 #include <ssengine/log.h>
 
@@ -7,7 +8,7 @@
 
 #include <assert.h>
 
-//TODO: check if format is right.
+//TODO: check if format is right (between input_layout and buffer).
 
 void ss_gl_render_input_layout::use(ss_gl_render_input_layout* old){
 	std::vector<int> usedSlots;
@@ -59,39 +60,6 @@ void ss_gl_render_input_layout::use(ss_gl_render_input_layout* old){
 	}
 }
 
-inline size_t ss_render_format_ele_size(ss_render_format type){
-	static size_t values[] = {
-		0, 4
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
-}
-
-inline int ss_render_format_ele_type(ss_render_format type){
-	static int values[] = {
-		0, GL_FLOAT
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
-}
-
-inline GLboolean ss_render_format_normalized(ss_render_format type){
-	static GLboolean values[] = {
-		0, GL_FALSE
-	};
-	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
-		return values[iType];
-	}
-	return 0;
-}
-
 void ss_gl_render_input_layout::rebind(size_t i){
 	ss_gl_render_input_element& ele = elements[i];
 	unsigned int location = ele.location;
@@ -105,7 +73,7 @@ void ss_gl_render_input_layout::rebind(size_t i){
 			glEnableVertexAttribArray(location);
 		}
 		const char* buffer = reinterpret_cast<const char*>(
-			static_cast<ss_gl_vertex_buffer_memory*>(vbi.buffer)->buf
+			static_cast<ss_gl_buffer_memory*>(vbi.buffer)->buf
 			);
 
 		const char* pointer = buffer + vbi.offset + ele.alignOffset;
@@ -157,6 +125,7 @@ void ss_gl_render_pass::begin(){
 		tech->device->program = program;
 		glUseProgram(program);
 	}
+	rebindAllPSCB();
 }
 
 void ss_gl_render_pass::end(){
@@ -164,6 +133,7 @@ void ss_gl_render_pass::end(){
 	if (tech->device->pass == this){
 		tech->device->pass = NULL;
 	}
+	// No need to call glUseProgram(0);
 }
 
 int ss_gl_render_pass::loadShader(int type, const char* src){
@@ -183,7 +153,8 @@ int ss_gl_render_pass::loadShader(int type, const char* src){
 		glGetShaderInfoLog(shader, infoLen, &infoLen, buf);
 		SS_LOGE("GL Shader Compile Error: \n%s", buf);
 		delete[] buf;
-		return false;
+		glDeleteShader(shader);
+		return 0;
 	}
 	glAttachShader(program, shader);
 	return shader;
@@ -206,6 +177,35 @@ bool ss_gl_render_pass::link(){
 	return true;
 }
 
+void ss_gl_render_pass::rebindPSCB(size_t slot){
+	if (slot < ps_constants.size()){
+		ss_gl_buffer_memory* buf = (ss_gl_buffer_memory*)tech->device->ps_constant_buffers[slot];
+
+		constant_declaration& cons = ps_constants[slot];
+		for (auto itor = cons.uniforms.begin();
+			itor != cons.uniforms.end();
+			++itor){
+			const char* buffer = reinterpret_cast<const char*>(buf->buf) + itor->offset;
+			switch (itor->format){
+			case SS_FORMAT_FLOAT32_RGBA:
+				{
+					const float* values = reinterpret_cast<const float*>(buffer);
+					glUniform4f(itor->location, values[0], values[1], values[2], values[3]);
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+void ss_gl_render_pass::rebindAllPSCB(){
+	for (size_t i = 0; i < ps_constants.size(); ++i){
+		rebindPSCB(i);
+	}
+}
+
 ss_gl_render_technique::ss_gl_render_technique(size_t passCount)
 	: count(passCount),
 	passes(new ss_gl_render_pass[passCount])
@@ -218,7 +218,6 @@ ss_gl_render_technique::ss_gl_render_technique(size_t passCount)
 ss_gl_render_technique::~ss_gl_render_technique(){
 	delete[] passes;
 }
-
 
 ss_render_input_layout* ss_gl_render_technique::create_input_layout(
 	ss_render_input_element* elements,
