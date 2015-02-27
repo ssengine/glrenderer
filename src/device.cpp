@@ -207,9 +207,9 @@ ss_gl_render_device::~ss_gl_render_device(){
 }
 
 // Create device from WGL
-ss_render_device* ss_device_factory(ss_device_type dt, uintptr_t hwnd)
+ss_render_device* ss_render_device_factory(ss_render_device_type dt, uintptr_t hwnd)
 {
-	if (dt == SS_DT_OPENGL || dt == SS_DT_ANY){
+	if (dt == SS_RDT_OPENGL || dt == SS_RDT_ANY){
 		ss_gl_render_device* ret = new ss_gl_render_device();
 		if (!ret->init((HWND)hwnd)){
 			delete ret;

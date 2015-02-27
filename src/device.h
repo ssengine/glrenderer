@@ -274,5 +274,5 @@ private:
 };
 
 extern "C"{
-	SS_EXPORT ss_render_device* ss_device_factory(ss_device_type dt, uintptr_t hwnd);
+	SS_EXPORT ss_render_device* ss_render_device_factory(ss_render_device_type dt, uintptr_t hwnd);
 }
