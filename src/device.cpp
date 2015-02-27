@@ -28,7 +28,7 @@ static int s_primitive_wrapper[MAX_SUPPORED_PRIMITIVES + 1] = {
 };
 
 ss_gl_render_device::ss_gl_render_device()
-	: pt(SS_MT_NULL), gl_pt(0),
+	: pt(SS_PT_NULL), gl_pt(0),
 		input_layout(nullptr),
 		program(0), pass(nullptr)
 {
