@@ -261,6 +261,8 @@ struct ss_gl_render_device
 	int							program;
 
 	void release_predefined_techniques();
+
+    void init();
 #ifdef WIN32
 public:
 	bool init(HWND hwnd);

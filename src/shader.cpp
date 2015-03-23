@@ -182,21 +182,40 @@ void ss_gl_render_pass::rebindPSCB(size_t slot){
 		ss_gl_buffer_memory* buf = (ss_gl_buffer_memory*)tech->device->ps_constant_buffers[slot];
 
 		constant_declaration& cons = ps_constants[slot];
-		for (auto itor = cons.uniforms.begin();
-			itor != cons.uniforms.end();
-			++itor){
-			const char* buffer = reinterpret_cast<const char*>(buf->buf) + itor->offset;
-			switch (itor->format){
-			case SS_FORMAT_FLOAT32_RGBA:
-				{
-					const float* values = reinterpret_cast<const float*>(buffer);
-					glUniform4f(itor->location, values[0], values[1], values[2], values[3]);
-				}
-				break;
-			default:
-				break;
-			}
-		}
+
+        if (buf){
+            for (auto itor = cons.uniforms.begin();
+                itor != cons.uniforms.end();
+                ++itor){
+                const char* buffer = reinterpret_cast<const char*>(buf->buf) + itor->offset;
+                switch (itor->format){
+                case SS_FORMAT_FLOAT32_RGBA:
+                {
+                    const float* values = reinterpret_cast<const float*>(buffer);
+                    glUniform4f(itor->location, values[0], values[1], values[2], values[3]);
+                }
+                break;
+                default:
+                    break;
+                }
+            }
+        }
+        else {
+            for (auto itor = cons.uniforms.begin();
+                itor != cons.uniforms.end();
+                ++itor){
+                switch (itor->format){
+                case SS_FORMAT_FLOAT32_RGBA:
+                {
+                    glUniform4f(itor->location, 0.0f, 0.0f, 0.0f, 1.0f);
+                }
+                break;
+                default:
+                    break;
+                }
+            }
+        }
+
 	}
 }
 

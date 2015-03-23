@@ -37,7 +37,9 @@ static ss_gl_render_technique* load_blank_technique(){
 		);
 	ASSUME_SUCCESS(fs);
 
-	ASSUME_SUCCESS(pass0.link());
+    glBindAttribLocation(pass0.program, 0, "a_position");
+    
+    ASSUME_SUCCESS(pass0.link());
 
 	pass0.ps_constants.resize(1);
 	pass0.ps_constants[0].uniforms.push_back(
@@ -51,7 +53,6 @@ static ss_gl_render_technique* load_blank_technique(){
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
 
-	glBindAttribLocation(pass0.program, 0, "a_position");
 
 	ret->input_elements.push_back(SS_USAGE_POSITION);
 
@@ -86,7 +87,10 @@ static ss_gl_render_technique* load_standard_technique_no_texture(){
 
 	ASSUME_SUCCESS(fs);
 
-	ASSUME_SUCCESS(pass0.link());
+    glBindAttribLocation(pass0.program, 0, "a_position");
+    glBindAttribLocation(pass0.program, 1, "a_color");
+    
+    ASSUME_SUCCESS(pass0.link());
 
 	pass0.ps_constants.resize(0);
 
@@ -94,9 +98,6 @@ static ss_gl_render_technique* load_standard_technique_no_texture(){
 
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
-
-	glBindAttribLocation(pass0.program, 0, "a_position");
-	glBindAttribLocation(pass0.program, 1, "a_color");
 
 	ret->input_elements.push_back(SS_USAGE_POSITION);
 	ret->input_elements.push_back(SS_USAGE_DIFFUSE);
@@ -137,7 +138,11 @@ static ss_gl_render_technique* load_standard_technique(){
 
 	ASSUME_SUCCESS(fs);
 
-	ASSUME_SUCCESS(pass0.link());
+    glBindAttribLocation(pass0.program, 0, "a_position");
+    glBindAttribLocation(pass0.program, 1, "a_color");
+    glBindAttribLocation(pass0.program, 2, "a_texcoord");
+    
+    ASSUME_SUCCESS(pass0.link());
 
 	pass0.ps_constants.resize(0);
 
@@ -146,10 +151,6 @@ static ss_gl_render_technique* load_standard_technique(){
 
 	glDetachShader(pass0.program, vs);
 	glDetachShader(pass0.program, fs);
-
-	glBindAttribLocation(pass0.program, 0, "a_position");
-	glBindAttribLocation(pass0.program, 1, "a_color");
-	glBindAttribLocation(pass0.program, 2, "a_texcoord");
 
 	ret->input_elements.push_back(SS_USAGE_POSITION);
 	ret->input_elements.push_back(SS_USAGE_DIFFUSE);
