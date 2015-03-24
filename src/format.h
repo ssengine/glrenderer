@@ -4,10 +4,10 @@
 
 inline size_t ss_render_format_ele_size(ss_render_format type){
 	static size_t values[] = {
-		0, 4, 4, 2
+		0, 4, 4, 2, 4
 	};
 	int iType = (int)type;
-	if (iType >= 0 && iType <= 3){
+	if (iType >= 0 && iType <= 4){
 		return values[iType];
 	}
 	return 0;
@@ -15,10 +15,10 @@ inline size_t ss_render_format_ele_size(ss_render_format type){
 
 inline int ss_render_format_ele_type(ss_render_format type){
 	static int values[] = {
-		0, GL_FLOAT, GL_UNSIGNED_BYTE, GL_FLOAT
+        0, GL_FLOAT, GL_UNSIGNED_BYTE, GL_FLOAT, GL_UNSIGNED_BYTE
 	};
 	int iType = (int)type;
-	if (iType >= 0 && iType <= 3){
+	if (iType >= 0 && iType <= 4){
 		return values[iType];
 	}
 	return 0;
@@ -26,10 +26,10 @@ inline int ss_render_format_ele_type(ss_render_format type){
 
 inline GLboolean ss_render_format_normalized(ss_render_format type){
 	static GLboolean values[] = {
-		0, GL_FALSE, GL_FALSE, GL_FALSE
+		0, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE
 	};
 	int iType = (int)type;
-	if (iType >= 0 && iType <= 3){
+	if (iType >= 0 && iType <= 4){
 		return values[iType];
 	}
 	return 0;
@@ -37,11 +37,22 @@ inline GLboolean ss_render_format_normalized(ss_render_format type){
 
 inline int ss_render_format_format(ss_render_format type){
 	static GLint values[] = {
-		0, GL_RGBA, GL_RGBA
+		0, GL_RGBA, GL_RGBA, GL_RG, GL_BGRA
 	};
 	int iType = (int)type;
-	if (iType >= 0 && iType <= 2){
+	if (iType >= 0 && iType <= 4){
 		return values[iType];
 	}
 	return 0;
+}
+
+inline int ss_render_format_internal_format(ss_render_format type){
+    static GLint values[] = {
+        0, GL_RGBA, GL_RGBA, GL_RG, GL_RGBA
+    };
+    int iType = (int)type;
+    if (iType >= 0 && iType <= 4){
+        return values[iType];
+    }
+    return 0;
 }

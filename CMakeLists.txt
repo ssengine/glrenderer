@@ -3,6 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT(SSGLRenderer)
 
 SET(LOCAL_SOURCES_FILES
+	src/format.h
 	src/device.h
 	src/device.cpp
 

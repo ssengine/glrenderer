@@ -25,7 +25,7 @@ ss_texture2d* ss_gl_render_device::create_texture2d(
 	glBindTexture(GL_TEXTURE_2D, ret->name);
 
 	glTexImage2D(GL_TEXTURE_2D, 0,
-		ss_render_format_format(format),
+        ss_render_format_internal_format(format),
 		width, height,
 		0,
 		ss_render_format_format(format),
