@@ -164,7 +164,17 @@ struct ss_gl_texture2d :
 	ss_gl_texture2d();
 	virtual ~ss_gl_texture2d();
 
+    virtual ss::int2 get_size(){
+        return size;
+    }
+    virtual ss::int2 get_origin_size(){
+        return origin_size;
+    }
+    virtual void set_origin_size(ss::int2 v){
+        origin_size = v;
+    }
 	unsigned int		name;
+    ss::int2 size, origin_size;
 };
 
 struct ss_gl_sampler_info

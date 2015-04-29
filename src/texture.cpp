@@ -17,6 +17,7 @@ ss_texture2d* ss_gl_render_device::create_texture2d(
 	const void* data)
 {
 	ss_gl_texture2d* ret = new ss_gl_texture2d();
+    ret->size = ret->origin_size = ss::int2((int)width, (int)height);
 
 	//TODO: use cached state to avoid glGet:
 	int old;
